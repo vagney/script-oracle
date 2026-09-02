@@ -32,14 +32,14 @@ jobs:
           # COLE O SEU COMANDO OCI COMPUTE INSTANCE LAUNCH LOGO ABAIXO:
           resposta=$(oci compute instance launch \
             --availability-domain "zYjZ:SA-VINHEDO-1-AD-1" \
-            --compartment-id "SEU_COMPARTMENT_ID_AQUI" \
+            --compartment-id "SEU_COMPARTMENT_ID" \
             --shape "VM.Standard.A1.Flex" \
             --shape-config '{"ocpus": 4, "memoryInGBs": 24}' \
-            --subnet-id "SUA_SUBNET_ID_AQUI" \
-            --image-id "SUA_IMAGE_ID_AQUI" \
+            --subnet-id "SUA_SUBNET_ID" \
+            --image-id "SUA_IMAGE_ID" \
             --assign-public-ip true \
             --display-name "Minha-Maquina-ARM" \
-            --metadata '{"ssh_authorized_keys": "SUA_CHAVE_SSH_AQUI"}' 2>&1)
+            --metadata '{"ssh_authorized_keys": "SUA_CHAVE_SSH"}' 2>&1)
           
           echo "Resposta da Oracle:"
           echo "$resposta"
