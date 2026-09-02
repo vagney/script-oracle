@@ -2,9 +2,8 @@ name: Tentar Vaga Oracle ARM
 
 on:
   schedule:
-    # Roda a cada 15 minutos (seguro contra bloqueios da Oracle)
     - cron: '*/15 * * * *'
-  workflow_dispatch: # Permite rodar manualmente no botão
+  workflow_dispatch: 
 
 jobs:
   criar-vm:
@@ -31,9 +30,15 @@ jobs:
           OCI_CLI_REGION: ${{ secrets.OCI_REGION }}
           OCI_CLI_KEY_FILE: private_key.pem
         run: |
-          echo "Iniciando tentativa..."
+          echo "Iniciando tentativa..."    
           
-          # Executa o seu script capturando a saída
+          # Verifica se o script existe antes de rodar
+          if [ ! -f "criar_instancia.sh" ]; then
+            echo "Erro: O arquivo criar_instancia.sh não foi encontrado na raiz do repositório!"
+            exit 2
+          fi
+          
+          chmod +x criar_instancia.sh
           resposta=$(bash criar_instancia.sh 2>&1)
           
           echo "Resposta da Oracle:"
