@@ -9,9 +9,6 @@ jobs:
   criar-vm:
     runs-on: ubuntu-latest
     steps:
-      - name: Baixar código do repositório
-        uses: actions/checkout@v4
-
       - name: Instalar OCI CLI
         run: |
           python -m pip install --upgrade pip
@@ -30,16 +27,19 @@ jobs:
           OCI_CLI_REGION: ${{ secrets.OCI_REGION }}
           OCI_CLI_KEY_FILE: private_key.pem
         run: |
-          echo "Iniciando tentativa..."    
+          echo "Iniciando tentativa na Oracle..."    
           
-          # Verifica se o script existe antes de rodar
-          if [ ! -f "criar_instancia.sh" ]; then
-            echo "Erro: O arquivo criar_instancia.sh não foi encontrado na raiz do repositório!"
-            exit 2
-          fi
-          
-          chmod +x criar_instancia.sh
-          resposta=$(bash criar_instancia.sh 2>&1)
+          # COLE O SEU COMANDO OCI COMPUTE INSTANCE LAUNCH LOGO ABAIXO:
+          resposta=$(oci compute instance launch \
+            --availability-domain "zYjZ:SA-VINHEDO-1-AD-1" \
+            --compartment-id "SEU_COMPARTMENT_ID_AQUI" \
+            --shape "VM.Standard.A1.Flex" \
+            --shape-config '{"ocpus": 4, "memoryInGBs": 24}' \
+            --subnet-id "SUA_SUBNET_ID_AQUI" \
+            --image-id "SUA_IMAGE_ID_AQUI" \
+            --assign-public-ip true \
+            --display-name "Minha-Maquina-ARM" \
+            --metadata '{"ssh_authorized_keys": "SUA_CHAVE_SSH_AQUI"}' 2>&1)
           
           echo "Resposta da Oracle:"
           echo "$resposta"
@@ -47,6 +47,6 @@ jobs:
           if [[ "$resposta" == *"PROVISIONING"* || ("$resposta" == *"\"lifecycle-state\":"* && "$resposta" != *"Error"* && "$resposta" != *"ServiceError"*) ]]; then
               echo "¡SUCESSO REAL! A máquina foi aceita."
           else
-              echo "Sem vagas. Tentaremos novamente no próximo ciclo."
+              echo "Sem vagas ou erro tratado. Tentaremos novamente no próximo ciclo."
               exit 1 
           fi
