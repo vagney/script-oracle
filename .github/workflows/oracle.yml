@@ -1,0 +1,47 @@
+name: Tentar Vaga Oracle ARM
+
+on:
+  schedule:
+    # Roda a cada 15 minutos (seguro contra bloqueios da Oracle)
+    - cron: '*/15 * * * *'
+  workflow_dispatch: # Permite rodar manualmente no botão
+
+jobs:
+  criar-vm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar código do repositório
+        uses: actions/checkout@v4
+
+      - name: Instalar OCI CLI
+        run: |
+          python -m pip install --upgrade pip
+          pip install oci-cli
+
+      - name: Preparar Chave Privada
+        run: |
+          echo "${{ secrets.OCI_KEY_FILE }}" > private_key.pem
+          chmod 600 private_key.pem
+
+      - name: Executar Tentativa de Criação
+        env:
+          OCI_CLI_USER: ${{ secrets.OCI_USER }}
+          OCI_CLI_TENANCY: ${{ secrets.OCI_TENANCY }}
+          OCI_CLI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+          OCI_CLI_REGION: ${{ secrets.OCI_REGION }}
+          OCI_CLI_KEY_FILE: private_key.pem
+        run: |
+          echo "Iniciando tentativa..."
+          
+          # Executa o seu script capturando a saída
+          resposta=$(bash criar_instancia.sh 2>&1)
+          
+          echo "Resposta da Oracle:"
+          echo "$resposta"
+          
+          if [[ "$resposta" == *"PROVISIONING"* || ("$resposta" == *"\"lifecycle-state\":"* && "$resposta" != *"Error"* && "$resposta" != *"ServiceError"*) ]]; then
+              echo "¡SUCESSO REAL! A máquina foi aceita."
+          else
+              echo "Sem vagas. Tentaremos novamente no próximo ciclo."
+              exit 1 
+          fi
