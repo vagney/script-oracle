@@ -27,26 +27,30 @@ jobs:
           OCI_CLI_REGION: ${{ secrets.OCI_REGION }}
           OCI_CLI_KEY_FILE: private_key.pem
         run: |
-          echo "Iniciando tentativa na Oracle..."    
+          echo "Iniciando tentativa na Oracle..."      
           
-          # COLE O SEU COMANDO OCI COMPUTE INSTANCE LAUNCH LOGO ABAIXO:
-          resposta=$(oci compute instance launch \
+          if resposta=$(oci compute instance launch \
             --availability-domain "zYjZ:SA-VINHEDO-1-AD-1" \
-            --compartment-id "SEU_COMPARTMENT_ID" \
+            --compartment-id "${{ secrets.OCI_COMPARTMENT_ID }}" \
             --shape "VM.Standard.A1.Flex" \
             --shape-config '{"ocpus": 4, "memoryInGBs": 24}' \
-            --subnet-id "SUA_SUBNET_ID" \
-            --image-id "SUA_IMAGE_ID" \
+            --subnet-id "${{ secrets.OCI_SUBNET_ID }}" \
+            --image-id "${{ secrets.OCI_IMAGE_ID }}" \
             --assign-public-ip true \
-            --display-name "Minha-Maquina-ARM" \
-            --metadata '{"ssh_authorized_keys": "SUA_CHAVE_SSH"}' 2>&1)
-          
-          echo "Resposta da Oracle:"
-          echo "$resposta"
-          
-          if [[ "$resposta" == *"PROVISIONING"* || ("$resposta" == *"\"lifecycle-state\":"* && "$resposta" != *"Error"* && "$resposta" != *"ServiceError"*) ]]; then
-              echo "¡SUCESSO REAL! A máquina foi aceita."
+            --display-name "poliedro-lab" \
+            --metadata '{"ssh_authorized_keys": "'"${{ secrets.OCI_SSH_KEY }}"'"}' 2>&1); then
+            
+            echo "Resposta da Oracle:"
+            echo "$resposta"
+            
+            if [[ "$resposta" == *"PROVISIONING"* || ("$resposta" == *"\"lifecycle-state\":"* && "$resposta" != *"Error"* && "$resposta" != *"ServiceError"*) ]]; then
+                echo "¡SUCESSO REAL! A máquina foi aceita."
+            else
+                echo "Sem vagas (Out of host capacity)."
+                exit 1
+            fi
           else
-              echo "Sem vagas ou erro tratado. Tentaremos novamente no próximo ciclo."
-              exit 1 
+            echo "Erro na execução do comando OCI CLI:"
+            echo "$resposta"
+            exit 2
           fi
